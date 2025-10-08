@@ -1,0 +1,61 @@
+src/pages/AdminSeatMap.jsx
+
+import React, { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import axios from 'axios'
+import { API_BASE } from '../api'
+
+export default function AdminSeatMap(){
+  const { showId } = useParams()
+  const [seats, setSeats] = useState([])
+  const [message, setMessage] = useState('')
+
+  useEffect(()=>{
+    fetchSeats()
+  }, [showId])
+
+  async function fetchSeats(){
+    try{
+      const res = await axios.get(${API_BASE}/api/admin/shows/${showId}/seats)
+      setSeats(res.data.seats)
+    } catch(err){
+      setMessage(err.response?.data?.error || err.message)
+    }
+  }
+
+  async function toggleSeat(seatId){
+    try{
+      await axios.patch(${API_BASE}/api/admin/shows/${showId}/seats/${seatId})
+      fetchSeats()
+    } catch(err){
+      setMessage(err.response?.data?.error || err.message)
+    }
+  }
+
+  const rows = {}
+  seats.forEach(s => { const r = s.seat_id[0]; (rows[r]=rows[r]||[]).push(s) })
+
+  return (
+    <div className="max-w-4xl mx-auto mt-6 p-4 bg-white rounded shadow">
+      <h2 className="text-xl font-semibold mb-4">Admin Seat Map Management — Show {showId}</h2>
+      {message && <div className="mb-4 text-sm text-red-600">{message}</div>}
+      <div className="space-y-2">
+        {Object.keys(rows).sort().map(rk => (
+          <div key={rk} className="flex gap-2">
+            <div className="w-8 flex items-center">{rk}</div>
+            <div className="flex flex-wrap gap-2">
+              {rows[rk].map(s => (
+                <div
+                  key={s.seat_id}
+                  onClick={()=>toggleSeat(s.seat_id)}
+                  className={w-12 h-12 flex items-center justify-center rounded cursor-pointer ${s.status==='booked'?'bg-red-200':'bg-green-100'}}
+                >{s.seat_id}</div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
